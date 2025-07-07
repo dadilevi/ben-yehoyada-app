@@ -56,4 +56,3 @@ if user_question:
             st.markdown(answer)
         except Exception as e:
             st.error("שגיאה בתקשורת עם OpenAI. ודא שמפתח ה־API שלך תקין.")
-Add streamlit app
