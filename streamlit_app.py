@@ -1,58 +1,46 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 
-# הגדר את מפתח ה־API שלך כאן או דרך הגדרות סביבתיות
-openai.api_key = st.secrets.get("OPENAI_API_KEY")
+# טען את מפתח ה־API בצורה מאובטחת
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-st.set_page_config(page_title="בן יהוידע אינטראקטיבי", layout="wide")
+st.set_page_config(page_title="בן יהוידע – סנהדרין ק״ח ע״ב", layout="centered")
 
-# --- כותרת ראשית ---
 st.title("📖 בן יהוידע – סנהדרין ק״ח ע״ב")
-st.markdown("### עיון ולימוד עם פרשנות חיה")
-
-# --- קטע מהספר ---
-ben_yehoyada_text = """
-**אורשינא** – עוף ושמו "חול", בלשון המקרא, ואינו מת לעולם.  
-אמר לו נח: מדוע אינך אוכל?  
-אמר לו: ראיתי אותך טרוד, ולא רציתי להטריח אותך.  
-אמר לו: יהי רצון שלא תמות לעולם.
-
-👉 מכאן למדנו: מידה של ענווה והתחשבות יכולה להעניק חיים מעבר לגבולות הטבע.
-"""
+st.subheader("עיון ולימוד עם פרשנות חיה")
 
 with st.expander("📜 קטע מתוך בן יהוידע"):
-    st.markdown(ben_yehoyada_text)
+    st.markdown("""
+**אורשינא** – עוף ושמו "חול", בלשון המקראי, ואינו מת לעולם  
+אמר לו נח: מדוע אינך אוכל?  
+אמר לו: ראיתי אותך טרוד, ולא רציתי להטריח אותך  
+אמר לו: יהי רצון שלא תמות לעולם
 
-# --- תיבת שיחה עם GPT ---
+👉 מכאן למדנו: מידה של ענווה והתחשבות יכולה להעניק חיים מעבר לגבולות הטבע.
+""")
+
 st.markdown("---")
 st.markdown("### 🤖 שאל את בן יהוידע")
+question = st.text_input("מה תרצה לשאול על הקטע הזה?")
 
-user_question = st.text_input("מה תרצה לשאול על הקטע הזה?", placeholder="למה דווקא ענווה מזכה בחיי נצח?")
-
-if user_question:
-    with st.spinner("חושב יחד איתך..."):
-        prompt = f"""
-        אתה פרשן חכם ורגיש, המתמחה בפירוש אגדות חז״ל. קיבלת את הקטע הבא מתוך ספר 'בן יהוידע' על סנהדרין ק״ח ע״ב:
-
-        {ben_yehoyada_text}
-
-        והשאלה שנשאלה היא:
-        {user_question}
-
-        השב תשובה מעמיקה, בהירה, עם נגיעה מוסרית או קבלית לפי ההקשר.
-        """
+if question:
+    with st.spinner("בן יהוידע חושב על תשובה..."):
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a wise and empathetic Talmudic commentator."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
-                max_tokens=500
+                    {
+                        "role": "system",
+                        "content": "אתה בן יהוידע, חכם מקובל ופילוסוף יהודי. ענה לשאלות בעומק, בשפה נגישה ובנימה מלמדת, בהתבסס על הקטע שניתן."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"הנה הקטע: \"אורשינא – עוף ושמו חול...\". והשאלה שלי: {question}"
+                    }
+                ]
             )
-            answer = response["choices"][0]["message"]["content"]
-            st.markdown("#### ✨ תשובה:")
-            st.markdown(answer)
+            answer = response.choices[0].message.content
+            st.markdown("**✍️ תשובת בן יהוידע:**")
+            st.write(answer)
         except Exception as e:
-            st.error("שגיאה בתקשורת עם OpenAI. ודא שמפתח ה־API שלך תקין.")
+            st.error(f"שגיאה בהתקשרות עם OpenAI: {e}")
